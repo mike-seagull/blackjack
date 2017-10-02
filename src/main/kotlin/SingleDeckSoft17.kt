@@ -2,23 +2,23 @@ class SingleDeckSoft17( money: Int): Player("SingleDeckSoft17", money) {
     override fun turn(dealerShows: Shoe.Card, shoe: Shoe) {
         for (hand in hands) {
             if (hand.canSplit()) {
-                splitRules(dealerShows, hand, shoe)
+                splitDoubleAfterSplitNotAllowedRules(dealerShows, hand, shoe)
             } else if (hand.isSoft()) {
                 softRules(dealerShows, hand, shoe)
             } else {
-                rules(dealerShows, hand, shoe)
+                strategy(dealerShows, hand, shoe)
             }
         }
     }
     private fun hit(dealerShows: Shoe.Card, hand: Hand, shoe: Shoe): Boolean {
         hand.draw(shoe.deal())
-        return rules(dealerShows, hand, shoe)
+        return strategy(dealerShows, hand, shoe)
     }
     private fun stand() = false
     private fun double(hand: Hand, shoe: Shoe): Boolean {
         return hand.draw(shoe.deal())
     }
-    private fun rules(dealerShows: Shoe.Card, hand: Hand, shoe: Shoe):Boolean {
+    private fun strategy(dealerShows: Shoe.Card, hand: Hand, shoe: Shoe):Boolean {
         return when (hand.value()) {
             in 5..7 -> {
                 hit(dealerShows, hand, shoe)
@@ -54,14 +54,38 @@ class SingleDeckSoft17( money: Int): Player("SingleDeckSoft17", money) {
             } else -> stand()
         }
     }
-    private fun splitRules(dealerShows: Shoe.Card, hand: Hand, shoe: Shoe) {
+    private fun splitDoubleAfterSplitNotAllowedRules(dealerShows: Shoe.Card, hand: Hand, shoe: Shoe) {
         when (hand.cards.get(0).rank) {
-            Shoe.Card.Rank.DEUCE -> if (dealerShows.rank in Shoe.Card.Rank.DEUCE..Shoe.Card.Rank.SEVEN) {
+            Shoe.Card.Rank.DEUCE -> if (dealerShows.rank in Shoe.Card.Rank.THREE..Shoe.Card.Rank.SEVEN) {
                 split(hand, shoe)
             } else {
-                hit(dealerShows)
+                hit(dealerShows, hand, shoe)
             }
-            Shoe.Card.Rank.THREE -> if ()
+            Shoe.Card.Rank.THREE -> if (dealerShows.rank in Shoe.Card.Rank.FOUR..Shoe.Card.Rank.SEVEN) {
+                split(hand, shoe)
+            } else {
+                hit(dealerShows, hand, shoe)
+            }
+            Shoe.Card.Rank.SIX -> if (dealerShows.rank in Shoe.Card.Rank.DEUCE..Shoe.Card.Rank.SIX) {
+                split(hand, shoe)
+            } else {
+                hit(dealerShows, hand, shoe)
+            }
+            Shoe.Card.Rank.SEVEN -> if (dealerShows.rank in Shoe.Card.Rank.DEUCE..Shoe.Card.Rank.SEVEN) {
+                split(hand, shoe)
+            } else if (dealerShows.rank in Shoe.Card.Rank.TEN.. Shoe.Card.Rank.KING) {
+                stand()
+            } else {
+                hit(dealerShows, hand, shoe)
+            }
+            Shoe.Card.Rank.EIGHT -> split(hand, shoe)
+            Shoe.Card.Rank.NINE -> if ((dealerShows.rank in Shoe.Card.Rank.DEUCE..Shoe.Card.Rank.SIX) || (dealerShows.rank in Shoe.Card.Rank.EIGHT..Shoe.Card.Rank.NINE)) {
+                split(hand, shoe)
+            } else {
+                stand()
+            }
+            in Shoe.Card.Rank.TEN..Shoe.Card.Rank.KING -> stand()
+            Shoe.Card.Rank.ACE -> split(hand, shoe)
         }
     }
     private fun softRules(dealerShows: Shoe.Card, hand: Hand, shoe: Shoe) {
